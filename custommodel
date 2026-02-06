@@ -1,0 +1,50 @@
+from typing import Any, List, Optional, Dict
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from langchain_core.outputs import ChatResult, ChatGeneration
+
+class CustomChatModel(BaseChatModel):
+    """
+    A custom chat model that translates LangChain messages 
+    into a list-of-dicts format.
+    """
+
+    # Define any parameters your model needs (e.g., API key, temperature)
+    model_name: str = "my-custom-model" 
+    
+    def _generate(
+        self, 
+        messages: List[BaseMessage], 
+        stop: Optional[List[str]] = None, 
+        **kwargs: Any
+    ) -> ChatResult:
+        
+        # --- STEP 1: Convert LangChain Messages to Your JSON Format ---
+        formatted_messages = []
+        for msg in messages:
+            if isinstance(msg, SystemMessage):
+                formatted_messages.append({"role": "system", "content": msg.content})
+            elif isinstance(msg, HumanMessage):
+                formatted_messages.append({"role": "user", "content": msg.content})
+            elif isinstance(msg, AIMessage):
+                formatted_messages.append({"role": "assistant", "content": msg.content})
+            # Handle other types (ToolMessage) if necessary
+        
+        # --- STEP 2: Call Your Custom API/Model ---
+        # This is where you would make your HTTP request
+        # response = requests.post("https://my-api.com/chat", json={"messages": formatted_messages})
+        
+        # Simulating a response for this example:
+        print(f"Sending payload to API: {formatted_messages}")
+        mock_response_content = f"I received your request about: {formatted_messages[-1]['content']}"
+
+        # --- STEP 3: Convert Response Back to LangChain Format ---
+        # Wrap the text response in an AIMessage, then in a ChatGeneration
+        message = AIMessage(content=mock_response_content)
+        generation = ChatGeneration(message=message)
+        
+        return ChatResult(generations=[generation])
+
+    @property
+    def _llm_type(self) -> str:
+        return "custom_chat_model"
