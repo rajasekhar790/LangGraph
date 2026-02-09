@@ -1,0 +1,56 @@
+import os
+import requests
+from dotenv import load_dotenv
+from typing import Dict, Any
+
+# Load environment variables
+load_dotenv()
+
+
+def get_gna_cases(
+    application: str,
+    from_date: str,
+    to_date: str,
+    subscriber_identifier: str,
+    timeout: int = 30
+) -> Dict[str, Any]:
+    """
+    Fetch GNA cases using values read from environment variables
+    """
+
+    base_url = os.getenv("GNA_API_URL")
+    api_key = os.getenv("GNA_API_KEY")
+
+    if not base_url or not api_key:
+        raise EnvironmentError("Missing GNA_API_URL or GNA_API_KEY in .env file")
+
+    headers = {
+        "x-api-key": api_key,
+        "Accept": "application/json"
+    }
+
+    params = {
+        "application": application,
+        "fromDate": from_date,
+        "toDate": to_date,
+        "subscriberIdentifier": subscriber_identifier
+    }
+
+    try:
+        response = requests.get(
+            base_url,
+            headers=headers,
+            params=params,
+            timeout=timeout
+        )
+
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        return {
+            "error": True,
+            "message": str(e),
+            "status_code": getattr(e.response, "status_code", None),
+            "response": getattr(e.response, "text", None),
+        }
