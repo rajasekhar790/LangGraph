@@ -54,3 +54,35 @@ def get_gna_cases(
             "status_code": getattr(e.response, "status_code", None),
             "response": getattr(e.response, "text", None),
         }
+###########################################################################################################################
+import requests
+from typing import Dict, Any
+
+def get_case_details(case_id: str) -> Dict[str, Any]:
+    url = f"https://uat.api.psgbd.ps.awsdsn.internal.das/gna-gateway/v2/gna/cases/{case_id}"
+
+    headers = {
+        "x-api-key": "B8kdzNaXgdMeeame5V21GQUCZdvJHO5Z",
+        "application": "Compass"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+
+        response.raise_for_status()  # raises HTTPError for 4xx/5xx
+
+        return response.json()  # assuming API returns JSON
+
+    except requests.exceptions.HTTPError as e:
+        return {
+            "error": "HTTP_ERROR",
+            "status_code": response.status_code,
+            "message": response.text
+        }
+
+    except requests.exceptions.RequestException as e:
+        return {
+            "error": "REQUEST_FAILED",
+            "message": str(e)
+        }
+
